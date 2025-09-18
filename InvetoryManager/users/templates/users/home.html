@@ -1,0 +1,28 @@
+{% extends "users/base.html" %}
+
+{% block title %}Главная страница{% endblock %}
+
+{% block content %}
+<h2>Добро пожаловать, {{ user.get_full_name }}!</h2>
+
+<div style="background: #f8f9fa; padding: 20px; border-radius: 5px; margin: 20px 0;">
+    <h3>Информация о пользователе:</h3>
+    <p><strong>Роль:</strong> {{ user.get_role_display }}</p>
+    <p><strong>Email:</strong> {{ user.email }}</p>
+    <p><strong>Имя:</strong> {{ user.first_name }} {{ user.last_name }}</p>
+</div>
+
+{% if user.role == 'admin' %}
+<div style="margin: 20px 0;">
+    <h3>Административные функции:</h3>
+    <a href="{% url 'users:register' %}" style="display: inline-block; background: #28a745; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px; margin-right: 10px;">
+        Зарегистрировать нового пользователя
+    </a>
+</div>
+{% endif %}
+
+<div style="margin-top: 30px;">
+    <h3>Быстрые действия:</h3>
+    <p>Здесь позже появятся ссылки на основные модули системы</p>
+</div>
+{% endblock %}
