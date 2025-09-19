@@ -7,7 +7,7 @@
 
 <form method="post">
     {% csrf_token %}
-    
+
     <div>
         <label for="id_email">Email:</label>
         {{ form.email }}
@@ -55,11 +55,10 @@
             <div style="color: red;">{{ form.password2.errors }}</div>
         {% endif %}
     </div>
-    
+
     <button type="submit">Зарегистрировать</button>
 </form>
-
-<div style="margin-top: 20px;">
-    <a href="{% url 'users:home' %}">← Назад на главную</a>
+<div class="mt-5 max-w-lg mx-auto">
+    <a href="{% url 'users:home' %}" class="text-blue-600 hover:underline">← Назад на главную</a>
 </div>
 {% endblock %}

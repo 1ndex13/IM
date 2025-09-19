@@ -1,0 +1,52 @@
+{% extends "users/base.html" %}
+
+{% block title %}Список товаров{% endblock %}
+
+{% block content %}
+<div class="flex justify-between items-center mb-6">
+    <h2 class="text-2xl font-bold">Список товаров</h2>
+    {% if user.role == 'admin' or user.role == 'manager' %}
+    <a href="{% url 'products:create' %}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+        Добавить товар
+    </a>
+    {% endif %}
+</div>
+
+<div class="overflow-x-auto">
+    <table class="min-w-full bg-white border border-gray-200">
+        <thead>
+            <tr>
+                <th class="py-2 px-4 border-b">Название</th>
+                <th class="py-2 px-4 border-b">Цена</th>
+                <th class="py-2 px-4 border-b">Количество</th>
+                <th class="py-2 px-4 border-b">Дата создания</th>
+                {% if user.role == 'admin' or user.role == 'manager' %}
+                <th class="py-2 px-4 border-b">Действия</th>
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for product in products %}
+            <tr>
+                <td class="py-2 px-4 border-b">{{ product.name }}</td>
+                <td class="py-2 px-4 border-b">{{ product.price }}</td>
+                <td class="py-2 px-4 border-b">{{ product.quantity }}</td>
+                <td class="py-2 px-4 border-b">{{ product.created_at|date:"d.m.Y H:i" }}</td>
+                {% if user.role == 'admin' or user.role == 'manager' %}
+                <td class="py-2 px-4 border-b">
+                    <a href="{% url 'products:update' product.pk %}" class="text-blue-600 hover:text-blue-800 mr-2">Редактировать</a>
+                    {% if user.role == 'admin' %}
+                    <a href="{% url 'products:delete' product.pk %}" class="text-red-600 hover:text-red-800">Удалить</a>
+                    {% endif %}
+                </td>
+                {% endif %}
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" class="py-4 px-4 text-center">Товары не найдены</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

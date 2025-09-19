@@ -7,7 +7,7 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            max-width: 800px;
+            max-width: 1440px;
             margin: 0 auto;
             padding: 20px;
             background-color: #f5f5f5;
@@ -16,7 +16,7 @@
             background: white;
             padding: 30px;
             border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 20px 20px rgba(0,0,0,0.3);
         }
         .messages {
             list-style: none;
@@ -58,7 +58,10 @@
             background-color: #0056b3;
         }
         nav {
+            display:flex;
+            justify-content: center;
             background: #343a40;
+            gap: 20px;
             color: white;
             padding: 10px 20px;
             margin-bottom: 20px;
@@ -69,31 +72,42 @@
             text-decoration: none;
             margin-left: 20px;
         }
+        span {
+        text-decoration: underline
+        }
     </style>
 </head>
 <body>
-    <nav>
-        {% if user.is_authenticated %}
-            <span>Добро пожаловать, {{ user.get_full_name }} ({{ user.get_role_display }})</span>
-            <a href="{% url 'users:logout' %}">Выйти</a>
-        {% else %}
-            <a href="{% url 'users:login' %}">Войти</a>
-        {% endif %}
-    </nav>
+<nav>
+    {% if user.is_authenticated %}
+    <span>{{ user.get_role_display }}</span>
+    <a href="{% url 'users:home' %}">Главная</a>
+    <a href="{% url 'products:list' %}">Товары</a>
 
-    <div class="container">
-        {% if messages %}
-            <ul class="messages">
-                {% for message in messages %}
-                    <li class="{{ message.tags }}">{{ message }}</li>
-                {% endfor %}
-            </ul>
-        {% endif %}
+    {% if user.role == 'admin' or user.role == 'manager' %}
+    <a href="{% url 'products:transaction' %}">Приход/Расход</a>
+    <a href="{% url 'products:history' %}">История операций</a>
+    {% endif %}
 
-        <main>
-            {% block content %}
-            {% endblock %}
-        </main>
-    </div>
+    <a href="{% url 'users:logout' %}">Выйти</a>
+    {% else %}
+    <a href="{% url 'users:login' %}">Войти</a>
+    {% endif %}
+</nav>
+
+<div class="container">
+    {% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+        <li class="{{ message.tags }}">{{ message }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    <main>
+        {% block content %}
+        {% endblock %}
+    </main>
+</div>
 </body>
 </html>

@@ -1,0 +1,32 @@
+{% extends "users/base.html" %}
+
+{% block title %}Операция с товаром{% endblock %}
+
+{% block content %}
+<h2>Приход/расход товара</h2>
+
+<form method="post">
+    {% csrf_token %}
+    
+    {% for field in form %}
+    <div class="mb-4">
+        <label for="{{ field.id_for_label }}" class="block text-gray-700 text-sm font-bold mb-2">
+            {{ field.label }}
+        </label>
+        {{ field }}
+        {% if field.errors %}
+        <p class="text-red-500 text-xs italic">{{ field.errors.0 }}</p>
+        {% endif %}
+    </div>
+    {% endfor %}
+    
+    <div class="flex items-center justify-between mt-6">
+        <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+            Сохранить
+        </button>
+        <a href="{% url 'products:list' %}" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
+            Отмена
+        </a>
+    </div>
+</form>
+{% endblock %}
