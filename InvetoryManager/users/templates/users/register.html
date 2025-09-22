@@ -15,7 +15,13 @@
             <div style="color: red;">{{ form.email.errors }}</div>
         {% endif %}
     </div>
-
+    <div>
+        <label for="id_last_name">Фамилия:</label>
+        {{ form.last_name }}
+        {% if form.last_name.errors %}
+        <div style="color: red;">{{ form.last_name.errors }}</div>
+        {% endif %}
+    </div>
     <div>
         <label for="id_first_name">Имя:</label>
         {{ form.first_name }}
@@ -24,13 +30,7 @@
         {% endif %}
     </div>
 
-    <div>
-        <label for="id_last_name">Фамилия:</label>
-        {{ form.last_name }}
-        {% if form.last_name.errors %}
-            <div style="color: red;">{{ form.last_name.errors }}</div>
-        {% endif %}
-    </div>
+
 
     <div>
         <label for="id_role">Роль:</label>

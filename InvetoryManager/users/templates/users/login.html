@@ -20,6 +20,9 @@
 
     <button type="submit">Войти</button>
 </form>
+<div class="mt-4">
+    <a href="{% url 'users:password_reset' %}" class="text-blue-600 hover:text-blue-800">Забыли пароль?</a>
+</div>
 
 {% if request.GET.next %}
     <input type="hidden" name="next" value="{{ request.GET.next }}">
