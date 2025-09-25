@@ -1,0 +1,150 @@
+{% extends "users/base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div>
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">{{ title }}</h2>
+        
+        <form method="post" id="invoice-form">
+            {% csrf_token %}
+            
+            <!-- Основная информация -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div>
+                    <label for="{{ form.invoice_number.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.invoice_number.label }} *
+                    </label>
+                    {{ form.invoice_number }}
+                </div>
+                
+                <div>
+                    <label for="{{ form.supplier.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.supplier.label }} *
+                    </label>
+                    {{ form.supplier }}
+                </div>
+                
+                <div>
+                    <label for="{{ form.invoice_date.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.invoice_date.label }} *
+                    </label>
+                    {{ form.invoice_date }}
+                </div>
+                
+                <div class="md:col-span-2">
+                    <label for="{{ form.comment.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.comment.label }}
+                    </label>
+                    {{ form.comment }}
+                </div>
+            </div>
+
+            <!-- Строки накладной -->
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Товары</h3>
+            <div id="formset-container">
+                {{ formset.management_form }}
+                
+                <div class="overflow-x-auto">
+                    <table class="min-w-full bg-gray-50 rounded-lg">
+                        <thead>
+                            <tr class="bg-gray-100">
+                                <th class="py-2 px-4 text-left">Товар</th>
+                                <th class="py-2 px-4 text-left">Количество</th>
+                                <th class="py-2 px-4 text-left">Цена закупки</th>
+                                <th class="py-2 px-4 text-left">Сумма</th>
+                                <th class="py-2 px-4 text-left">Действие</th>
+                            </tr>
+                        </thead>
+                        <tbody id="formset-tbody">
+                            {% for form in formset %}
+                            <tr class="formset-row border-b border-gray-200">
+                                <td class="py-2 px-4">{{ form.product }}{{ form.id }}</td>
+                                <td class="py-2 px-4">{{ form.quantity }}</td>
+                                <td class="py-2 px-4">{{ form.purchase_price }}</td>
+                                <td class="py-2 px-4">
+                                    <span class="row-total">0.00</span> ₸
+                                </td>
+                                <td class="py-2 px-4">
+                                    {% if formset.can_delete %}
+                                    {{ form.DELETE }} <label for="{{ form.DELETE.id_for_label }}">Удалить</label>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Итоговая сумма -->
+            <div class="mt-6 p-4 bg-gray-50 rounded-lg">
+                <div class="flex justify-between items-center">
+                    <span class="text-lg font-semibold">Общая сумма:</span>
+                    <span id="total-amount" class="text-xl font-bold text-blue-600">0.00 ₸</span>
+                </div>
+            </div>
+
+            <!-- Кнопки -->
+            <div class="flex items-center justify-between mt-8 pt-6 border-t border-gray-200">
+                <button type="button" id="add-row" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg">
+                    Добавить строку
+                </button>
+                
+                <div class="flex space-x-4">
+                    <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg">
+                        Сохранить накладную
+                    </button>
+                    <a href="{% url 'products:purchase_invoice_list' %}" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-lg">
+                        Отмена
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Функция для расчета суммы строки
+    function calculateRowTotal(row) {
+        const quantity = parseFloat(row.querySelector('.quantity').value) || 0;
+        const price = parseFloat(row.querySelector('.price').value) || 0;
+        const total = quantity * price;
+        row.querySelector('.row-total').textContent = total.toFixed(2);
+        return total;
+    }
+
+    // Функция для расчета общей суммы
+    function calculateTotal() {
+        let total = 0;
+        document.querySelectorAll('.formset-row').forEach(row => {
+            if (!row.querySelector('input[name$="-DELETE"]').checked) {
+                total += calculateRowTotal(row);
+            }
+        });
+        document.getElementById('total-amount').textContent = total.toFixed(2) + ' ₸';
+    }
+
+    // Обработчики событий для полей ввода
+    document.querySelectorAll('.quantity, .price').forEach(input => {
+        input.addEventListener('input', calculateTotal);
+    });
+
+    // Обработчики для чекбоксов удаления
+    document.querySelectorAll('input[name$="-DELETE"]').forEach(checkbox => {
+        checkbox.addEventListener('change', calculateTotal);
+    });
+
+    // Кнопка добавления строки
+    document.getElementById('add-row').addEventListener('click', function() {
+        // Здесь должна быть логика для динамического добавления строк
+        alert('Для полной реализации нужно добавить JavaScript для динамического добавления строк формсета');
+    });
+
+    // Первоначальный расчет
+    calculateTotal();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,113 @@
+{% extends "users/base.html" %}
+
+{% block title %}Накладная {{ invoice.invoice_number }}{% endblock %}
+
+{% block content %}
+<div>
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <!-- Заголовок -->
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-800">Накладная {{ invoice.invoice_number }}</h2>
+                <p class="text-gray-600">от {{ invoice.invoice_date|date:"d.m.Y" }}</p>
+            </div>
+            <span class="px-3 py-1 text-sm rounded-full 
+                {% if invoice.status == 'draft' %}bg-yellow-100 text-yellow-800
+                {% elif invoice.status == 'completed' %}bg-green-100 text-green-800
+                {% else %}bg-red-100 text-red-800{% endif %}">
+                {{ invoice.get_status_display }}
+            </span>
+        </div>
+
+        <!-- Информация о накладной -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div>
+                <h3 class="text-lg font-semibold mb-2">Информация о поставщике</h3>
+                <p><strong>Поставщик:</strong> {{ invoice.supplier.name }}</p>
+                {% if invoice.supplier.contact_person %}
+                <p><strong>Контактное лицо:</strong> {{ invoice.supplier.contact_person }}</p>
+                {% endif %}
+                {% if invoice.supplier.phone %}
+                <p><strong>Телефон:</strong> {{ invoice.supplier.phone }}</p>
+                {% endif %}
+            </div>
+            
+            <div>
+                <h3 class="text-lg font-semibold mb-2">Информация о накладной</h3>
+                <p><strong>Создал:</strong> {{ invoice.created_by.get_full_name }}</p>
+                <p><strong>Дата создания:</strong> {{ invoice.created_at|date:"d.m.Y H:i" }}</p>
+                <p><strong>Общая сумма:</strong> <span class="font-bold text-lg">{{ invoice.total_amount }} ₸</span></p>
+            </div>
+        </div>
+
+        <!-- Товары -->
+        <h3 class="text-lg font-semibold mb-4">Товары в накладной</h3>
+        <div class="overflow-x-auto">
+            <table class="min-w-full bg-white rounded-lg">
+                <thead>
+                    <tr class="bg-gray-100">
+                        <th class="py-3 px-4 text-left">Товар</th>
+                        <th class="py-3 px-4 text-left">Артикул</th>
+                        <th class="py-3 px-4 text-left">Количество</th>
+                        <th class="py-3 px-4 text-left">Цена закупки</th>
+                        <th class="py-3 px-4 text-left">Сумма</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr class="border-b border-gray-200">
+                        <td class="py-3 px-4">{{ item.product.name }}</td>
+                        <td class="py-3 px-4 font-mono">{{ item.product.sku }}</td>
+                        <td class="py-3 px-4">{{ item.quantity }} {{ item.product.get_unit_display }}</td>
+                        <td class="py-3 px-4">{{ item.purchase_price }} ₸</td>
+                        <td class="py-3 px-4 font-medium">{{ item.total_price }} ₸</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="py-4 px-4 text-center text-gray-500">
+                            Нет товаров в накладной
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr class="bg-gray-50">
+                        <td colspan="4" class="py-3 px-4 text-right font-semibold">Итого:</td>
+                        <td class="py-3 px-4 font-bold text-lg">{{ invoice.total_amount }} ₸</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <!-- Комментарий -->
+        {% if invoice.comment %}
+        <div class="mt-6">
+            <h3 class="text-lg font-semibold mb-2">Комментарий</h3>
+            <p class="text-gray-700">{{ invoice.comment }}</p>
+        </div>
+        {% endif %}
+
+        <!-- Кнопки действий -->
+        <div class="flex justify-between items-center mt-8 pt-6 border-t border-gray-200">
+            <a href="{% url 'products:purchase_invoice_list' %}" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-lg">
+                Назад к списку
+            </a>
+            
+            {% if invoice.status == 'draft' %}
+            <div class="flex space-x-4">
+                <a href="{% url 'products:purchase_invoice_complete' invoice.pk %}" 
+                   class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-lg"
+                   onclick="return confirm('Завершить накладную? Остатки товаров будут увеличены.')">
+                    Завершить накладную
+                </a>
+                <a href="{% url 'products:purchase_invoice_cancel' invoice.pk %}" 
+                   class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-6 rounded-lg"
+                   onclick="return confirm('Отменить накладную?')">
+                    Отменить
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

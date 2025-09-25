@@ -3,28 +3,106 @@
 {% block title %}Главная страница{% endblock %}
 
 {% block content %}
-<h2>Добро пожаловать, {{ user.get_full_name }}!</h2>
+<div class="max-w-6xl mx-auto">
+    <div class="text-center mb-12">
+        <h1 class="text-4xl font-bold text-gray-800 mb-4">Добро пожаловать в Inventory Manager</h1>
+        <p class="text-xl text-gray-600">Система управления складом и товарными запасами</p>
+    </div>
 
-<div style="background: #f8f9fa; padding: 20px; border-radius: 5px; margin: 20px 0;">
-    <h3>Информация о пользователе:</h3>
-    <p><strong>Роль:</strong> {{ user.get_role_display }}</p>
-    <p><strong>Email:</strong> {{ user.email }}</p>
-    <p><strong>Имя:</strong> {{ user.first_name }} {{ user.last_name }}</p>
-</div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+        <div class="bg-white rounded-lg shadow-md p-6 text-center">
+            <div class="text-3xl font-bold text-blue-600 mb-2">{{ products_count }}</div>
+            <div class="text-gray-700">Товаров на складе</div>
+            <a href="{% url 'products:list' %}" class="inline-block mt-4 text-blue-600 hover:text-blue-800">Перейти к товарам →</a>
+        </div>
 
-{% if user.role == 'admin' %}
-<div style="margin: 20px 0;">
-    <h3>Административные функции:</h3>
-    <a href="{% url 'users:register' %}" style="display: inline-block; background: #28a745; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px; margin-right: 10px;">
-        Зарегистрировать нового пользователя
-    </a>
-</div>
-{% endif %}
+        <div class="bg-white rounded-lg shadow-md p-6 text-center">
+            <div class="text-3xl font-bold text-green-600 mb-2">{{ low_stock_count }}</div>
+            <div class="text-gray-700">Товаров с низким запасом</div>
+            <a href="{% url 'products:list' %}?low_stock=true" class="inline-block mt-4 text-green-600 hover:text-green-800">Просмотреть →</a>
+        </div>
 
-<div style="margin-top: 30px;">
-    <h3>Быстрые действия:</h3>
-    <a href="{% url 'products:list' %}" style="display: inline-block; background: #007bff; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px; margin-right: 10px;">
-        Просмотреть товары
-    </a>
+        <div class="bg-white rounded-lg shadow-md p-6 text-center">
+            <div class="text-3xl font-bold text-purple-600 mb-2">{{ invoices_count }}</div>
+            <div class="text-gray-700">Накладных прихода</div>
+            <a href="{% url 'products:purchase_invoice_list' %}" class="inline-block mt-4 text-purple-600 hover:text-purple-800">Перейти к накладным →</a>
+        </div>
+    </div>
+
+    <!-- Быстрые действия -->
+    <div class="">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">Быстрые действия</h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {% if user.role == 'admin' or user.role == 'manager' %}
+            <a href="{% url 'products:create' %}" class="bg-blue-500 hover:bg-blue-600 text-white text-center py-4 px-6 rounded-lg transition duration-200">
+                <div class="text-2xl mb-2">➕</div>
+                <div class="font-semibold">Добавить товар</div>
+            </a>
+
+            <a href="{% url 'products:purchase_invoice_create' %}" class="bg-green-500 hover:bg-green-600 text-white text-center py-4 px-6 rounded-lg transition duration-200">
+                <div class="text-2xl mb-2">📦</div>
+                <div class="font-semibold">Создать накладную</div>
+            </a>
+
+            <a href="{% url 'products:supplier_create' %}" class="bg-purple-500 hover:bg-purple-600 text-white text-center py-4 px-6 rounded-lg transition duration-200">
+                <div class="text-2xl mb-2">🏢</div>
+                <div class="font-semibold">Добавить поставщика</div>
+            </a>
+            {% endif %}
+
+            <a href="{% url 'products:transaction' %}" class="bg-orange-500 hover:bg-orange-600 text-white text-center py-4 px-6 rounded-lg transition duration-200">
+                <div class="text-2xl mb-2">📊</div>
+                <div class="font-semibold">Операция со складом</div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Последние операции -->
+    <div class="mt-12">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">Последние операции</h2>
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <table class="min-w-full">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="py-3 px-4 text-left">Дата</th>
+                        <th class="py-3 px-4 text-left">Товар</th>
+                        <th class="py-3 px-4 text-left">Тип операции</th>
+                        <th class="py-3 px-4 text-left">Количество</th>
+                        <th class="py-3 px-4 text-left">Пользователь</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transaction in recent_transactions %}
+                    <tr class="border-b border-gray-200 hover:bg-gray-50">
+                        <td class="py-3 px-4">{{ transaction.date|date:"d.m.Y H:i" }}</td>
+                        <td class="py-3 px-4">{{ transaction.product.name }}</td>
+                        <td class="py-3 px-4">
+                            <span class="px-2 py-1 text-xs rounded-full {% if transaction.transaction_type == 'in' %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+                                {{ transaction.get_transaction_type_display }}
+                            </span>
+                        </td>
+                        <td class="py-3 px-4">{{ transaction.quantity }}</td>
+                        <td class="py-3 px-4">{{ transaction.user.get_full_name|default:transaction.user.email }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="py-8 px-4 text-center text-gray-500">
+                            Операции не найдены
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            {% if recent_transactions %}
+            <div class="p-4 border-t border-gray-200">
+                <a href="{% url 'products:history' %}" class="text-blue-600 hover:text-blue-800 float-right">
+                    Вся история операций →
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
 </div>
 {% endblock %}

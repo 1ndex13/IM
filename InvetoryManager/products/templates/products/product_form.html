@@ -3,30 +3,123 @@
 {% block title %}{{ title }}{% endblock %}
 
 {% block content %}
-<h2 class="text-2xl font-bold mb-6">{{ title }}</h2>
+<div class="">
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">{{ title }}</h2>
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-4">
+                    <div>
+                        <label for="{{ form.name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                            {{ form.name.label }} *
+                        </label>
+                        {{ form.name }}
+                        {% if form.name.errors %}
+                        <p class="text-red-500 text-xs italic mt-1">{{ form.name.errors.0 }}</p>
+                        {% endif %}
+                    </div>
 
-<form method="post" class="max-w-lg">
-    {% csrf_token %}
-    
-    {% for field in form %}
-    <div class="mb-4">
-        <label for="{{ field.id_for_label }}" class="block text-gray-700 text-sm font-bold mb-2">
-            {{ field.label }}
-        </label>
-        {{ field }}
-        {% if field.errors %}
-        <p class="text-red-500 text-xs italic">{{ field.errors.0 }}</p>
-        {% endif %}
+                    <div>
+                        <label for="{{ form.sku.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                            {{ form.sku.label }} *
+                        </label>
+                        {{ form.sku }}
+                        {% if form.sku.errors %}
+                        <p class="text-red-500 text-xs italic mt-1">{{ form.sku.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <label for="{{ form.category.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                            {{ form.category.label }}
+                        </label>
+                        {{ form.category }}
+                        {% if form.category.errors %}
+                        <p class="text-red-500 text-xs italic mt-1">{{ form.category.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <label for="{{ form.unit.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                            {{ form.unit.label }} *
+                        </label>
+                        {{ form.unit }}
+                        {% if form.unit.errors %}
+                        <p class="text-red-500 text-xs italic mt-1">{{ form.unit.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+
+                    <div>
+                        <label for="{{ form.price.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                            {{ form.price.label }} *
+                        </label>
+                        {{ form.price }}
+                        {% if form.price.errors %}
+                        <p class="text-red-500 text-xs italic mt-1">{{ form.price.errors.0 }}</p>
+                        {% endif %}
+
+                    <div>
+                        <label for="{{ form.quantity.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                            {{ form.quantity.label }} *
+                        </label>
+                        {{ form.quantity }}
+                        {% if form.quantity.errors %}
+                        <p class="text-red-500 text-xs italic mt-1">{{ form.quantity.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <label for="{{ form.min_stock.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                            {{ form.min_stock.label }} *
+                        </label>
+                        {{ form.min_stock }}
+                        {% if form.min_stock.errors %}
+                        <p class="text-red-500 text-xs italic mt-1">{{ form.min_stock.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <label for="{{ form.image.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                            {{ form.image.label }}
+                        </label>
+                        {{ form.image }}
+                        {% if form.image.errors %}
+                        <p class="text-red-500 text-xs italic mt-1">{{ form.image.errors.0 }}</p>
+                        {% endif %}
+
+                        {% if form.instance.image %}
+                        <div class="mt-3 p-2 border border-gray-200 rounded-lg">
+                            <p class="text-sm text-gray-600 mb-2">Текущее изображение:</p>
+                            <img src="{{ form.instance.image.url }}" alt="{{ form.instance.name }}"
+                                 class="w-32 h-32 object-cover rounded-lg mx-auto">
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="mt-6">
+                <label for="{{ form.description.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                    {{ form.description.label }}
+                </label>
+                {{ form.description }}
+                {% if form.description.errors %}
+                <p class="text-red-500 text-xs italic mt-1">{{ form.description.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div class="flex items-center justify-between mt-8 pt-6 border-t border-gray-200">
+                <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg transition duration-200">
+                    Сохранить товар
+                </button>
+                <a href="{% url 'products:list' %}" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-lg transition duration-200">
+                    Отмена
+                </a>
+            </div>
+        </form>
     </div>
-    {% endfor %}
-    
-    <div class="flex items-center justify-between mt-6">
-        <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-            Сохранить
-        </button>
-        <a href="{% url 'products:list' %}" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
-            Отмена
-        </a>
-    </div>
-</form>
+</div>
 {% endblock %}
