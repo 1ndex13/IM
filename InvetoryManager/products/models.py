@@ -18,7 +18,7 @@ class Category(models.Model):
 
 class Product(models.Model):
     UNIT_CHOICES = [
-        ('шт', 'Штуки'),
+        ('шт', 'шт'),
         ('кг', 'Килограммы'),
         ('м', 'Метры'),
     ]

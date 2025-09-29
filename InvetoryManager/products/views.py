@@ -267,7 +267,6 @@ def purchase_invoice_complete(request, pk):
 @login_required
 @user_passes_test(is_admin_or_manager)
 def purchase_invoice_cancel(request, pk):
-    """Отмена накладной"""
     invoice = get_object_or_404(PurchaseInvoice, pk=pk)
 
     if invoice.status != 'draft':
@@ -279,3 +278,47 @@ def purchase_invoice_cancel(request, pk):
 
     messages.success(request, 'Накладная отменена!')
     return redirect('products:purchase_invoice_detail', pk=pk)
+
+
+@login_required
+def transaction_history(request):
+    product_filter = request.GET.get('product', '')
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
+    user_filter = request.GET.get('user', '')
+    transaction_type = request.GET.get('type', '')
+
+    transactions = StockTransaction.objects.all().select_related('product', 'user')
+
+    if product_filter:
+        transactions = transactions.filter(product_id=product_filter)
+
+    if date_from:
+        transactions = transactions.filter(date__gte=date_from)
+
+    if date_to:
+        transactions = transactions.filter(date__lte=date_to)
+
+    if user_filter:
+        transactions = transactions.filter(user_id=user_filter)
+
+    if transaction_type:
+        transactions = transactions.filter(transaction_type=transaction_type)
+    paginator = Paginator(transactions, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    products = Product.objects.all()
+    users = get_user_model().objects.filter(stocktransaction__isnull=False).distinct()
+
+    context = {
+        'transactions': page_obj,
+        'products': products,
+        'users': users,
+        'product_filter': product_filter,
+        'date_from': date_from,
+        'date_to': date_to,
+        'user_filter': user_filter,
+        'transaction_type': transaction_type,
+    }
+
+    return render(request, 'products/transaction_history.html', context)

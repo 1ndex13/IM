@@ -26,6 +26,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('users/', include('users.urls')),
     path('products/', include('products.urls')),
+    path('expenses/', include('expenses.urls')),
     path('', RedirectView.as_view(url='/users/home/', permanent=False)),
 ]
 if settings.DEBUG:

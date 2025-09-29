@@ -2,10 +2,12 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
+from django.db import models
 from .forms import CustomUserCreationForm
 from django.urls import reverse_lazy
 from django.contrib.auth.views import PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, PasswordResetCompleteView
 from .forms import CustomPasswordResetForm, CustomSetPasswordForm
+from products.models import Product, StockTransaction, PurchaseInvoice
 
 def is_admin(user):
     return user.is_authenticated and user.role == 'admin'
@@ -55,7 +57,18 @@ def register_view(request):
 
 @login_required
 def home_view(request):
-    return render(request, 'users/home.html', {'user': request.user})
+    products_count = Product.objects.count()
+    low_stock_count = Product.objects.filter(quantity__lte=models.F('min_stock')).count()
+    invoices_count = PurchaseInvoice.objects.count()
+    recent_transactions = StockTransaction.objects.select_related('product', 'user').order_by('-date')[:5]
+    context = {
+        'user': request.user,
+        'products_count': products_count,
+        'low_stock_count': low_stock_count,
+        'invoices_count': invoices_count,
+        'recent_transactions': recent_transactions,
+    }
+    return render(request, 'users/home.html', context)
 
 
 

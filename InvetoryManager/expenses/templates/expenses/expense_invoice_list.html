@@ -1,0 +1,180 @@
+{% extends "users/base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">{{ title }}</h2>
+
+        <form method="post" id="expense-form">
+            {% csrf_token %}
+
+            <!-- Основная информация -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                    <label for="{{ form.invoice_number.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.invoice_number.label }} *
+                    </label>
+                    {{ form.invoice_number }}
+                    {% if form.invoice_number.errors %}
+                    <p class="text-red-500 text-xs italic mt-1">{{ form.invoice_number.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label for="{{ form.expense_date.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.expense_date.label }} *
+                    </label>
+                    {{ form.expense_date }}
+                    {% if form.expense_date.errors %}
+                    <p class="text-red-500 text-xs italic mt-1">{{ form.expense_date.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="md:col-span-2">
+                    <label for="{{ form.reason.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.reason.label }} *
+                    </label>
+                    {{ form.reason }}
+                    {% if form.reason.errors %}
+                    <p class="text-red-500 text-xs italic mt-1">{{ form.reason.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Таблица товаров -->
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Товары для списания</h3>
+
+                {{ formset.management_form }}
+                <div class="overflow-x-auto">
+                    <table class="min-w-full bg-white border border-gray-200" id="items-table">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="py-2 px-4 border-b text-left text-sm font-medium text-gray-700">Товар</th>
+                                <th class="py-2 px-4 border-b text-left text-sm font-medium text-gray-700">Количество</th>
+                                <th class="py-2 px-4 border-b text-left text-sm font-medium text-gray-700">Цена</th>
+                                <th class="py-2 px-4 border-b text-left text-sm font-medium text-gray-700">Сумма</th>
+                                <th class="py-2 px-4 border-b text-left text-sm font-medium text-gray-700">Действие</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for form in formset %}
+                            <tr class="item-row border-b">
+                                <td class="py-2 px-4">
+                                    {{ form.id }}
+                                    {{ form.product }}
+                                    {% if form.product.errors %}
+                                    <p class="text-red-500 text-xs italic mt-1">{{ form.product.errors.0 }}</p>
+                                    {% endif %}
+                                </td>
+                                <td class="py-2 px-4">
+                                    {{ form.quantity }}
+                                    {% if form.quantity.errors %}
+                                    <p class="text-red-500 text-xs italic mt-1">{{ form.quantity.errors.0 }}</p>
+                                    {% endif %}
+                                </td>
+                                <td class="py-2 px-4 price-cell">0.00</td>
+                                <td class="py-2 px-4 total-cell">0.00</td>
+                                <td class="py-2 px-4">
+                                    {% if formset.can_delete %}
+                                    {{ form.DELETE }}
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <button type="button" id="add-item" class="mt-4 bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition duration-200">
+                    + Добавить товар
+                </button>
+            </div>
+
+            <div class="mb-6">
+                <label for="{{ form.comment.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                    {{ form.comment.label }}
+                </label>
+                {{ form.comment }}
+                {% if form.comment.errors %}
+                <p class="text-red-500 text-xs italic mt-1">{{ form.comment.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div class="bg-gray-50 p-4 rounded-lg mb-6">
+                <div class="flex justify-between items-center">
+                    <span class="text-lg font-semibold text-gray-800">Общая стоимость:</span>
+                    <span id="total-amount" class="text-2xl font-bold text-blue-600">0.00 ₽</span>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between mt-8 pt-6 border-t border-gray-200">
+                <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg transition duration-200">
+                    Сохранить накладную
+                </button>
+                <a href="{% url 'expenses:expense_invoice_list' %}" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-lg transition duration-200">
+                    Отмена
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    function updatePrices() {
+        let totalAmount = 0;
+
+        document.querySelectorAll('.item-row').forEach(row => {
+            const productSelect = row.querySelector('.product-select');
+            const quantityInput = row.querySelector('.quantity');
+            const priceCell = row.querySelector('.price-cell');
+            const totalCell = row.querySelector('.total-cell');
+
+            if (productSelect && quantityInput) {
+                const selectedOption = productSelect.options[productSelect.selectedIndex];
+                const price = selectedOption ? parseFloat(selectedOption.getAttribute('data-price')) || 0 : 0;
+                const quantity = parseFloat(quantityInput.value) || 0;
+                const total = price * quantity;
+
+                priceCell.textContent = price.toFixed(2);
+                totalCell.textContent = total.toFixed(2);
+
+                totalAmount += total;
+            }
+        });
+
+        document.getElementById('total-amount').textContent = totalAmount.toFixed(2) + ' ₽';
+    }
+
+    document.addEventListener('change', function(e) {
+        if (e.target.classList.contains('product-select') || e.target.classList.contains('quantity')) {
+            updatePrices();
+        }
+    });
+
+    document.getElementById('add-item').addEventListener('click', function() {
+        const totalForms = document.getElementById('id_form-TOTAL_FORMS');
+        const formNum = parseInt(totalForms.value);
+        const newRow = document.querySelector('.item-row').cloneNode(true);
+
+        newRow.querySelector('.product-select').selectedIndex = 0;
+        newRow.querySelector('.quantity').value = '';
+        newRow.querySelector('.price-cell').textContent = '0.00';
+        newRow.querySelector('.total-cell').textContent = '0.00';
+
+        newRow.innerHTML = newRow.innerHTML.replace(/form-\d+/g, `form-${formNum}`);
+        newRow.querySelector('td').innerHTML = newRow.querySelector('td').innerHTML.replace(/form-\d+/g, `form-${formNum}`);
+
+        document.querySelector('#items-table tbody').appendChild(newRow);
+        totalForms.value = formNum + 1;
+
+        updatePrices();
+    });
+
+    updatePrices();
+});
+</script>
+{% endblock %}

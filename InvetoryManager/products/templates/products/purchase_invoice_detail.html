@@ -36,11 +36,10 @@
                 <h3 class="text-lg font-semibold mb-2">Информация о накладной</h3>
                 <p><strong>Создал:</strong> {{ invoice.created_by.get_full_name }}</p>
                 <p><strong>Дата создания:</strong> {{ invoice.created_at|date:"d.m.Y H:i" }}</p>
-                <p><strong>Общая сумма:</strong> <span class="font-bold text-lg">{{ invoice.total_amount }} ₸</span></p>
+                <p><strong>Общая сумма:</strong> <span class="font-bold text-lg">{{ invoice.total_amount }} ₽</span></p>
             </div>
         </div>
 
-        <!-- Товары -->
         <h3 class="text-lg font-semibold mb-4">Товары в накладной</h3>
         <div class="overflow-x-auto">
             <table class="min-w-full bg-white rounded-lg">
@@ -59,8 +58,8 @@
                         <td class="py-3 px-4">{{ item.product.name }}</td>
                         <td class="py-3 px-4 font-mono">{{ item.product.sku }}</td>
                         <td class="py-3 px-4">{{ item.quantity }} {{ item.product.get_unit_display }}</td>
-                        <td class="py-3 px-4">{{ item.purchase_price }} ₸</td>
-                        <td class="py-3 px-4 font-medium">{{ item.total_price }} ₸</td>
+                        <td class="py-3 px-4">{{ item.purchase_price }} ₽</td>
+                        <td class="py-3 px-4 font-medium">{{ item.total_price }} ₽</td>
                     </tr>
                     {% empty %}
                     <tr>
@@ -73,7 +72,7 @@
                 <tfoot>
                     <tr class="bg-gray-50">
                         <td colspan="4" class="py-3 px-4 text-right font-semibold">Итого:</td>
-                        <td class="py-3 px-4 font-bold text-lg">{{ invoice.total_amount }} ₸</td>
+                        <td class="py-3 px-4 font-bold text-lg">{{ invoice.total_amount }} ₽</td>
                     </tr>
                 </tfoot>
             </table>

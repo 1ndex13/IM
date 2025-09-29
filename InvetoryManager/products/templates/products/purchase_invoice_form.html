@@ -64,7 +64,7 @@
                                 <td class="py-2 px-4">{{ form.quantity }}</td>
                                 <td class="py-2 px-4">{{ form.purchase_price }}</td>
                                 <td class="py-2 px-4">
-                                    <span class="row-total">0.00</span> ₸
+                                    <span class="row-total">0.00</span> ₽
                                 </td>
                                 <td class="py-2 px-4">
                                     {% if formset.can_delete %}
@@ -78,15 +78,13 @@
                 </div>
             </div>
 
-            <!-- Итоговая сумма -->
             <div class="mt-6 p-4 bg-gray-50 rounded-lg">
                 <div class="flex justify-between items-center">
                     <span class="text-lg font-semibold">Общая сумма:</span>
-                    <span id="total-amount" class="text-xl font-bold text-blue-600">0.00 ₸</span>
+                    <span id="total-amount" class="text-xl font-bold text-blue-600">0.00 ₽</span>
                 </div>
             </div>
 
-            <!-- Кнопки -->
             <div class="flex items-center justify-between mt-8 pt-6 border-t border-gray-200">
                 <button type="button" id="add-row" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg">
                     Добавить строку
@@ -124,7 +122,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 total += calculateRowTotal(row);
             }
         });
-        document.getElementById('total-amount').textContent = total.toFixed(2) + ' ₸';
+        document.getElementById('total-amount').textContent = total.toFixed(2) + ' ₽';
     }
 
     // Обработчики событий для полей ввода

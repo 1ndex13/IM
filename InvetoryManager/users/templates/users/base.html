@@ -3,111 +3,167 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Складская система{% endblock %}</title>
+    <title>{% block title %}Inventory Manager - Система управления складом{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 1440px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
+        .sidebar {
+            transition: all 0.3s ease;
         }
-        .container {
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 20px 20px rgba(0,0,0,0.3);
+        .sidebar.collapsed {
+            width: 70px;
         }
-        .messages {
-            list-style: none;
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 5px;
+        .sidebar.collapsed .nav-text {
+            display: none;
         }
-        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        .info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
-        .warning { background-color: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
-
-        form div {
-            margin-bottom: 15px;
+        .content-area {
+            transition: all 0.3s ease;
         }
-        label {
+        .dropdown:hover .dropdown-menu {
             display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
         }
-        input[type="email"],
-        input[type="password"],
-        input[type="text"] {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            box-sizing: border-box;
-        }
-        button {
-            background-color: #007bff;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-        nav {
-            display:flex;
-            justify-content: center;
-            background: #343a40;
-            gap: 20px;
-            color: white;
-            padding: 10px 20px;
-            margin-bottom: 20px;
-            border-radius: 5px;
-        }
-        nav a {
-            color: white;
-            text-decoration: none;
-            margin-left: 20px;
-        }
-        span {
-        text-decoration: underline
+        .table-row:hover {
+            background-color: #f8fafc;
         }
     </style>
 </head>
-<body>
-<nav>
-    {% if user.is_authenticated %}
-    <span>{{ user.get_role_display }}</span>
-    <a href="{% url 'users:home' %}">Главная</a>
-    <a href="{% url 'products:list' %}">Товары</a>
+<body class="bg-gray-50 flex h-screen">
+    <div class="sidebar bg-white shadow-lg w-64 flex flex-col">
+        <div class="p-4 border-b border-gray-200 flex items-center justify-between">
+            <div class="flex items-center">
+                <div class="bg-blue-500 text-white p-2 rounded-lg">
+                </div>
+                <h1 class="text-xl font-bold text-gray-800 ml-3">Inventory Manager</h1>
+            </div>
+            <button id="sidebar-toggle" class="text-gray-500 hover:text-gray-700">
+            </button>
+        </div>
+        <nav class="flex-1 p-4">
+            <ul class="space-y-2">
+                <li>
+                    <a href="{% url 'users:home' %}" class="flex items-center p-3 text-gray-700 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition duration-200">
+                        <span class="nav-text ml-3 font-medium">Главная</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'products:list' %}" class="flex items-center p-3 text-gray-700 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition duration-200">
+                        <span class="nav-text ml-3 font-medium">Товары</span>
+                    </a>
+                </li>
 
-    {% if user.role == 'admin' or user.role == 'manager' %}
-    <a href="{% url 'products:transaction' %}">Приход/Расход</a>
-    <a href="{% url 'products:history' %}">История операций</a>
-    {% endif %}
+                {% if user.role == 'admin' or user.role == 'manager' %}
+                <li class="dropdown relative">
+                    <a href="#" class="flex items-center justify-between p-3 text-gray-700 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition duration-200">
+                        <div class="flex items-center">
+                            <span class="nav-text ml-3 font-medium">Операции</span>
+                        </div>
+                    </a>
+                    <div class="dropdown-menu absolute left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 hidden z-10">
+                        <a href="{% url 'products:transaction' %}" class="block px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition duration-200">
+                            Приход/Расход
+                        </a>
+                        <a href="{% url 'products:purchase_invoice_list' %}" class="block px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition duration-200">
+                            Накладные прихода
+                        </a>
+                        <a href="{% url 'expenses:expense_invoice_list' %}" class="block px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition duration-200">
+                            Накладные расхода
+                        </a>
+                    </div>
+                </li>
 
-    <a href="{% url 'users:logout' %}">Выйти</a>
-    {% else %}
-    <a href="{% url 'users:login' %}">Войти</a>
-    {% endif %}
-</nav>
+                <li>
+                    <a href="{% url 'products:supplier_list' %}" class="flex items-center p-3 text-gray-700 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition duration-200">
+                        <span class="nav-text ml-3 font-medium">Поставщики</span>
+                    </a>
+                </li>
+                {% endif %}
 
-<div class="container">
-    {% if messages %}
-    <ul class="messages">
-        {% for message in messages %}
-        <li class="{{ message.tags }}">{{ message }}</li>
-        {% endfor %}
-    </ul>
-    {% endif %}
+                <li>
+                    <a href="{% url 'products:history' %}" class="flex items-center p-3 text-gray-700 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition duration-200">
+                        <span class="nav-text ml-3 font-medium">История операций</span>
+                    </a>
+                </li>
 
-    <main>
-        {% block content %}
-        {% endblock %}
-    </main>
-</div>
+                {% if user.role == 'admin' %}
+                <li>
+                    <a href="{% url 'users:register' %}" class="flex items-center p-3 text-gray-700 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition duration-200">
+                        <span class="nav-text ml-3 font-medium">Пользователи</span>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        <div class="p-4 border-t border-gray-200">
+            <div class="flex items-center">
+                <div class="bg-gray-200 rounded-full w-10 h-10 flex items-center justify-center">
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-gray-800">{{ user.get_full_name|default:user.email }}</p>
+                    <p class="text-xs text-gray-500">{{ user.get_role_display }}</p>
+                </div>
+            </div>
+            <a href="{% url 'users:logout' %}" class="mt-3 flex items-center justify-center w-full p-2 text-gray-600 rounded-lg border border-gray-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition duration-200">
+                <span class="nav-text ml-2">Выйти</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="content-area flex-1 flex flex-col overflow-hidden">
+        <header class="bg-white shadow-sm border-b border-gray-200">
+            <div class="flex items-center justify-between p-4">
+                <div>
+                    <h2 class="text-xl font-semibold text-gray-800">{% block page_title %}{% endblock %}</h2>
+                    <p class="text-sm text-gray-500">{% block page_subtitle %}{% endblock %}</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-sm">
+                        <span id="current-date"></span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        {% if messages %}
+        <div class="mx-4 mt-4">
+            {% for message in messages %}
+            <div class="p-4 rounded-lg mb-2 {% if message.tags == 'error' %}bg-red-50 text-red-700 border border-red-200{% elif message.tags == 'success' %}bg-green-50 text-green-700 border border-green-200{% else %}bg-blue-50 text-blue-700 border border-blue-200{% endif %}">
+                <div class="flex items-center">
+                    <span>{{ message }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <main class="flex-1 overflow-y-auto p-6">
+            {% block content %}
+            {% endblock %}
+        </main>
+    </div>
+
+    <script>
+        document.getElementById('current-date').textContent = new Date().toLocaleDateString('ru-RU', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+
+        document.getElementById('sidebar-toggle').addEventListener('click', function() {
+            document.querySelector('.sidebar').classList.toggle('collapsed');
+            document.querySelector('.content-area').classList.toggle('ml-16');
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentPath = window.location.pathname;
+            const navLinks = document.querySelectorAll('nav a');
+
+            navLinks.forEach(link => {
+                if (link.getAttribute('href') === currentPath) {
+                    link.classList.add('bg-blue-50', 'text-blue-600', 'border-r-4', 'border-blue-500');
+                }
+            });
+        });
+    </script>
 </body>
 </html>
