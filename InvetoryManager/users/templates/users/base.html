@@ -32,21 +32,25 @@
         <div class="p-4 border-b border-gray-200 flex items-center justify-between">
             <div class="flex items-center">
                 <div class="bg-blue-500 text-white p-2 rounded-lg">
+                    <i class="fas fa-boxes text-xl"></i>
                 </div>
                 <h1 class="text-xl font-bold text-gray-800 ml-3">Inventory Manager</h1>
             </div>
             <button id="sidebar-toggle" class="text-gray-500 hover:text-gray-700">
+                <i class="fas fa-bars"></i>
             </button>
         </div>
         <nav class="flex-1 p-4">
             <ul class="space-y-2">
                 <li>
                     <a href="{% url 'users:home' %}" class="flex items-center p-3 text-gray-700 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition duration-200">
+                        <i class="fas fa-home w-6 text-center"></i>
                         <span class="nav-text ml-3 font-medium">Главная</span>
                     </a>
                 </li>
                 <li>
                     <a href="{% url 'products:list' %}" class="flex items-center p-3 text-gray-700 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition duration-200">
+                        <i class="fas fa-box w-6 text-center"></i>
                         <span class="nav-text ml-3 font-medium">Товары</span>
                     </a>
                 </li>
@@ -55,8 +59,10 @@
                 <li class="dropdown relative">
                     <a href="#" class="flex items-center justify-between p-3 text-gray-700 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition duration-200">
                         <div class="flex items-center">
+                            <i class="fas fa-exchange-alt w-6 text-center"></i>
                             <span class="nav-text ml-3 font-medium">Операции</span>
                         </div>
+                        <i class="fas fa-chevron-down text-xs"></i>
                     </a>
                     <div class="dropdown-menu absolute left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 hidden z-10">
                         <a href="{% url 'products:transaction' %}" class="block px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition duration-200">
@@ -73,6 +79,7 @@
 
                 <li>
                     <a href="{% url 'products:supplier_list' %}" class="flex items-center p-3 text-gray-700 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition duration-200">
+                        <i class="fas fa-truck w-6 text-center"></i>
                         <span class="nav-text ml-3 font-medium">Поставщики</span>
                     </a>
                 </li>
@@ -80,6 +87,7 @@
 
                 <li>
                     <a href="{% url 'products:history' %}" class="flex items-center p-3 text-gray-700 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition duration-200">
+                        <i class="fas fa-history w-6 text-center"></i>
                         <span class="nav-text ml-3 font-medium">История операций</span>
                     </a>
                 </li>
@@ -87,22 +95,30 @@
                 {% if user.role == 'admin' %}
                 <li>
                     <a href="{% url 'users:register' %}" class="flex items-center p-3 text-gray-700 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition duration-200">
+                        <i class="fas fa-user-plus w-6 text-center"></i>
                         <span class="nav-text ml-3 font-medium">Пользователи</span>
                     </a>
                 </li>
                 {% endif %}
             </ul>
         </nav>
+
         <div class="p-4 border-t border-gray-200">
             <div class="flex items-center">
                 <div class="bg-gray-200 rounded-full w-10 h-10 flex items-center justify-center">
+                    <i class="fas fa-user text-gray-600"></i>
                 </div>
                 <div class="ml-3">
-                    <p class="text-sm font-medium text-gray-800">{{ user.get_full_name|default:user.email }}</p>
+                   {% if user.is_authenticated %}
+  <p class="text-sm font-medium text-gray-800">{{ user.get_full_name|default:user.email }}</p>
+{% else %}
+  <p class="text-sm font-medium text-gray-800">Guest</p>
+{% endif %}
                     <p class="text-xs text-gray-500">{{ user.get_role_display }}</p>
                 </div>
             </div>
             <a href="{% url 'users:logout' %}" class="mt-3 flex items-center justify-center w-full p-2 text-gray-600 rounded-lg border border-gray-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition duration-200">
+                <i class="fas fa-sign-out-alt"></i>
                 <span class="nav-text ml-2">Выйти</span>
             </a>
         </div>
@@ -117,6 +133,7 @@
                 </div>
                 <div class="flex items-center space-x-4">
                     <div class="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-sm">
+                        <i class="fas fa-calendar-day mr-2"></i>
                         <span id="current-date"></span>
                     </div>
                 </div>
@@ -128,6 +145,7 @@
             {% for message in messages %}
             <div class="p-4 rounded-lg mb-2 {% if message.tags == 'error' %}bg-red-50 text-red-700 border border-red-200{% elif message.tags == 'success' %}bg-green-50 text-green-700 border border-green-200{% else %}bg-blue-50 text-blue-700 border border-blue-200{% endif %}">
                 <div class="flex items-center">
+                    <i class="fas {% if message.tags == 'error' %}fa-exclamation-circle{% elif message.tags == 'success' %}fa-check-circle{% else %}fa-info-circle{% endif %} mr-3"></i>
                     <span>{{ message }}</span>
                 </div>
             </div>

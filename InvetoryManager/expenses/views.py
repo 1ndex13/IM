@@ -1,3 +1,4 @@
+import json
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
@@ -118,13 +119,11 @@ def expense_invoice_complete(request, pk):
 
     try:
         with transaction.atomic():
-            # Проверяем достаточность остатков
             for item in invoice.expenseinvoiceitem_set.all():
                 if item.product.quantity < item.quantity:
                     messages.error(request, f'Недостаточно товара "{item.product.name}" на складе!')
                     return redirect('expenses:expense_invoice_detail', pk=pk)
 
-            # Уменьшаем остатки и создаем операции
             for item in invoice.expenseinvoiceitem_set.all():
                 product = item.product
                 product.quantity -= item.quantity
@@ -164,3 +163,61 @@ def expense_invoice_cancel(request, pk):
 
     messages.success(request, 'Накладная расхода отменена!')
     return redirect('expenses:expense_invoice_detail', pk=pk)
+
+@login_required
+@user_passes_test(is_admin_or_manager)
+def expense_invoice_create_simple(request):
+    """Упрощенное создание накладной расхода"""
+    if request.method == 'POST':
+        form = ExpenseInvoiceForm(request.POST)
+
+        if form.is_valid():
+            try:
+                with transaction.atomic():
+                    invoice = form.save(commit=False)
+                    invoice.created_by = request.user
+                    invoice.save()
+
+                    items_data = request.POST.get('items_data', '[]')
+                    items = json.loads(items_data)
+
+                    for item in items:
+                        product = Product.objects.get(id=item['product_id'])
+                        quantity = int(item['quantity'])
+
+                        ExpenseInvoiceItem.objects.create(
+                            invoice=invoice,
+                            product=product,
+                            quantity=quantity
+                        )
+
+                    invoice.update_total_amount()
+
+                    messages.success(request, 'Накладная расхода успешно создана!')
+                    return redirect('expenses:expense_invoice_list')
+
+            except Exception as e:
+                messages.error(request, f'Ошибка при создании накладной: {str(e)}')
+        else:
+            messages.error(request, 'Пожалуйста, исправьте ошибки в форме')
+    else:
+        last_invoice = ExpenseInvoice.objects.order_by('-id').first()
+        next_number = f"РС-{(last_invoice.id + 1) if last_invoice else 1:06d}" if last_invoice else "РС-000001"
+        form = ExpenseInvoiceForm(initial={'invoice_number': next_number})
+
+    products_data = []
+    for product in Product.objects.all():
+        products_data.append({
+            'id': product.id,
+            'name': product.name,
+            'sku': product.sku,
+            'price': float(product.price),
+            'quantity': product.quantity,
+            'unit': product.unit
+        })
+
+    return render(request, 'expenses/expense_invoice_form_simple.html', {
+        'form': form,
+        'products': json.dumps(products_data),
+        'title': 'Создать накладную расхода'
+    })

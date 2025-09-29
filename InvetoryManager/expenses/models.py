@@ -45,12 +45,13 @@ class ExpenseInvoice(models.Model):
         return f"Накладная расхода {self.invoice_number} от {self.expense_date}"
 
     def update_total_amount(self):
-        from django.db.models import Sum, F
+        """Обновление общей суммы накладной"""
+        from django.db.models import Sum
         total = self.expenseinvoiceitem_set.aggregate(
-            total=Sum(F('quantity') * F('product__price'))
+            total=Sum('total_price')
         )['total'] or 0
         self.total_amount = total
-        self.save()
+        self.save(update_fields=['total_amount'])
 
 
 class ExpenseInvoiceItem(models.Model):

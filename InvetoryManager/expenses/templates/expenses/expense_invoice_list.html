@@ -1,180 +1,90 @@
 {% extends "users/base.html" %}
 
-{% block title %}{{ title }}{% endblock %}
+{% block title %}Накладные расхода{% endblock %}
 
 {% block content %}
-<div class="max-w-6xl mx-auto">
-    <div class="bg-white rounded-lg shadow-md p-6">
-        <h2 class="text-2xl font-bold text-gray-800 mb-6">{{ title }}</h2>
+<div>
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-800">Накладные расхода</h2>
+        <a href="{% url 'expenses:expense_invoice_create' %}" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition duration-200">
+            Создать накладную
+        </a>
+    </div>
 
-        <form method="post" id="expense-form">
-            {% csrf_token %}
-
-            <!-- Основная информация -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <div>
-                    <label for="{{ form.invoice_number.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
-                        {{ form.invoice_number.label }} *
-                    </label>
-                    {{ form.invoice_number }}
-                    {% if form.invoice_number.errors %}
-                    <p class="text-red-500 text-xs italic mt-1">{{ form.invoice_number.errors.0 }}</p>
-                    {% endif %}
-                </div>
-
-                <div>
-                    <label for="{{ form.expense_date.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
-                        {{ form.expense_date.label }} *
-                    </label>
-                    {{ form.expense_date }}
-                    {% if form.expense_date.errors %}
-                    <p class="text-red-500 text-xs italic mt-1">{{ form.expense_date.errors.0 }}</p>
-                    {% endif %}
-                </div>
-
-                <div class="md:col-span-2">
-                    <label for="{{ form.reason.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
-                        {{ form.reason.label }} *
-                    </label>
-                    {{ form.reason }}
-                    {% if form.reason.errors %}
-                    <p class="text-red-500 text-xs italic mt-1">{{ form.reason.errors.0 }}</p>
-                    {% endif %}
-                </div>
-            </div>
-
-            <!-- Таблица товаров -->
-            <div class="mb-6">
-                <h3 class="text-lg font-semibold text-gray-800 mb-4">Товары для списания</h3>
-
-                {{ formset.management_form }}
-                <div class="overflow-x-auto">
-                    <table class="min-w-full bg-white border border-gray-200" id="items-table">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="py-2 px-4 border-b text-left text-sm font-medium text-gray-700">Товар</th>
-                                <th class="py-2 px-4 border-b text-left text-sm font-medium text-gray-700">Количество</th>
-                                <th class="py-2 px-4 border-b text-left text-sm font-medium text-gray-700">Цена</th>
-                                <th class="py-2 px-4 border-b text-left text-sm font-medium text-gray-700">Сумма</th>
-                                <th class="py-2 px-4 border-b text-left text-sm font-medium text-gray-700">Действие</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for form in formset %}
-                            <tr class="item-row border-b">
-                                <td class="py-2 px-4">
-                                    {{ form.id }}
-                                    {{ form.product }}
-                                    {% if form.product.errors %}
-                                    <p class="text-red-500 text-xs italic mt-1">{{ form.product.errors.0 }}</p>
-                                    {% endif %}
-                                </td>
-                                <td class="py-2 px-4">
-                                    {{ form.quantity }}
-                                    {% if form.quantity.errors %}
-                                    <p class="text-red-500 text-xs italic mt-1">{{ form.quantity.errors.0 }}</p>
-                                    {% endif %}
-                                </td>
-                                <td class="py-2 px-4 price-cell">0.00</td>
-                                <td class="py-2 px-4 total-cell">0.00</td>
-                                <td class="py-2 px-4">
-                                    {% if formset.can_delete %}
-                                    {{ form.DELETE }}
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-
-                <button type="button" id="add-item" class="mt-4 bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition duration-200">
-                    + Добавить товар
-                </button>
-            </div>
-
-            <div class="mb-6">
-                <label for="{{ form.comment.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
-                    {{ form.comment.label }}
-                </label>
-                {{ form.comment }}
-                {% if form.comment.errors %}
-                <p class="text-red-500 text-xs italic mt-1">{{ form.comment.errors.0 }}</p>
-                {% endif %}
-            </div>
-
-            <div class="bg-gray-50 p-4 rounded-lg mb-6">
-                <div class="flex justify-between items-center">
-                    <span class="text-lg font-semibold text-gray-800">Общая стоимость:</span>
-                    <span id="total-amount" class="text-2xl font-bold text-blue-600">0.00 ₽</span>
-                </div>
-            </div>
-
-            <div class="flex items-center justify-between mt-8 pt-6 border-t border-gray-200">
-                <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg transition duration-200">
-                    Сохранить накладную
-                </button>
-                <a href="{% url 'expenses:expense_invoice_list' %}" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-lg transition duration-200">
-                    Отмена
-                </a>
-            </div>
-        </form>
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <table class="min-w-full">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Номер</th>
+                    <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Дата</th>
+                    <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Причина</th>
+                    <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Статус</th>
+                    <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Сумма</th>
+                    <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Создал</th>
+                    <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Действия</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for invoice in invoices %}
+                <tr class="hover:bg-gray-50 transition duration-150">
+                    <td class="py-3 px-4 whitespace-nowrap">
+                        <div class="text-sm font-medium text-gray-900">{{ invoice.invoice_number }}</div>
+                    </td>
+                    <td class="py-3 px-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">{{ invoice.expense_date|date:"d.m.Y" }}</div>
+                    </td>
+                    <td class="py-3 px-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">{{ invoice.reason.name }}</div>
+                    </td>
+                    <td class="py-3 px-4 whitespace-nowrap">
+                        <span class="px-2 py-1 text-xs rounded-full
+                            {% if invoice.status == 'draft' %}bg-yellow-100 text-yellow-800
+                            {% elif invoice.status == 'completed' %}bg-green-100 text-green-800
+                            {% else %}bg-red-100 text-red-800{% endif %}">
+                            {{ invoice.get_status_display }}
+                        </span>
+                    </td>
+                    <td class="py-3 px-4 whitespace-nowrap">
+                        <div class="text-sm font-medium text-gray-900">{{ invoice.total_amount }} ₽</div>
+                    </td>
+                    <td class="py-3 px-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">{{ invoice.created_by.get_full_name }}</div>
+                    </td>
+                    <td class="py-3 px-4 whitespace-nowrap">
+                        <div class="flex space-x-2">
+                            <a href="{% url 'expenses:expense_invoice_detail' invoice.pk %}"
+                               class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                                Просмотр
+                            </a>
+                            {% if invoice.status == 'draft' %}
+                            <span class="text-gray-300">|</span>
+                            <a href="{% url 'expenses:expense_invoice_complete' invoice.pk %}"
+                               class="text-green-600 hover:text-green-800 text-sm font-medium"
+                               onclick="return confirm('Завершить накладную? Остатки будут уменьшены.')">
+                                Завершить
+                            </a>
+                            <span class="text-gray-300">|</span>
+                            <a href="{% url 'expenses:expense_invoice_cancel' invoice.pk %}"
+                               class="text-red-600 hover:text-red-800 text-sm font-medium"
+                               onclick="return confirm('Отменить накладную?')">
+                                Отменить
+                            </a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="py-8 px-4 text-center">
+                        <div class="text-gray-500 text-lg">Накладные расхода не найдены</div>
+                        <a href="{% url 'expenses:expense_invoice_create' %}" class="text-blue-600 hover:text-blue-800 mt-2 inline-block">
+                            Создать первую накладную
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    function updatePrices() {
-        let totalAmount = 0;
-
-        document.querySelectorAll('.item-row').forEach(row => {
-            const productSelect = row.querySelector('.product-select');
-            const quantityInput = row.querySelector('.quantity');
-            const priceCell = row.querySelector('.price-cell');
-            const totalCell = row.querySelector('.total-cell');
-
-            if (productSelect && quantityInput) {
-                const selectedOption = productSelect.options[productSelect.selectedIndex];
-                const price = selectedOption ? parseFloat(selectedOption.getAttribute('data-price')) || 0 : 0;
-                const quantity = parseFloat(quantityInput.value) || 0;
-                const total = price * quantity;
-
-                priceCell.textContent = price.toFixed(2);
-                totalCell.textContent = total.toFixed(2);
-
-                totalAmount += total;
-            }
-        });
-
-        document.getElementById('total-amount').textContent = totalAmount.toFixed(2) + ' ₽';
-    }
-
-    document.addEventListener('change', function(e) {
-        if (e.target.classList.contains('product-select') || e.target.classList.contains('quantity')) {
-            updatePrices();
-        }
-    });
-
-    document.getElementById('add-item').addEventListener('click', function() {
-        const totalForms = document.getElementById('id_form-TOTAL_FORMS');
-        const formNum = parseInt(totalForms.value);
-        const newRow = document.querySelector('.item-row').cloneNode(true);
-
-        newRow.querySelector('.product-select').selectedIndex = 0;
-        newRow.querySelector('.quantity').value = '';
-        newRow.querySelector('.price-cell').textContent = '0.00';
-        newRow.querySelector('.total-cell').textContent = '0.00';
-
-        newRow.innerHTML = newRow.innerHTML.replace(/form-\d+/g, `form-${formNum}`);
-        newRow.querySelector('td').innerHTML = newRow.querySelector('td').innerHTML.replace(/form-\d+/g, `form-${formNum}`);
-
-        document.querySelector('#items-table tbody').appendChild(newRow);
-        totalForms.value = formNum + 1;
-
-        updatePrices();
-    });
-
-    updatePrices();
-});
-</script>
 {% endblock %}

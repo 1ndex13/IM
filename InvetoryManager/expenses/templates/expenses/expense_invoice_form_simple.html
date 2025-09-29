@@ -1,0 +1,248 @@
+{% extends "users/base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">{{ title }}</h2>
+
+        <form method="post" id="expense-form">
+            {% csrf_token %}
+            <input type="hidden" name="items_data" id="items-data" value="[]">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                    <label for="{{ form.invoice_number.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.invoice_number.label }} *
+                    </label>
+                    {{ form.invoice_number }}
+                    {% if form.invoice_number.errors %}
+                    <p class="text-red-500 text-xs italic mt-1">{{ form.invoice_number.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label for="{{ form.expense_date.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.expense_date.label }} *
+                    </label>
+                    {{ form.expense_date }}
+                    {% if form.expense_date.errors %}
+                    <p class="text-red-500 text-xs italic mt-1">{{ form.expense_date.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="md:col-span-2">
+                    <label for="{{ form.reason.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.reason.label }} *
+                    </label>
+                    {{ form.reason }}
+                    {% if form.reason.errors %}
+                    <p class="text-red-500 text-xs italic mt-1">{{ form.reason.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Товары для списания</h3>
+
+                <div class="overflow-x-auto">
+                    <table class="min-w-full bg-white border border-gray-200" id="items-table">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">Товар</th>
+                                <th class="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">Количество</th>
+                                <th class="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">Цена</th>
+                                <th class="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">Сумма</th>
+                                <th class="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">Остаток</th>
+                                <th class="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">Действие</th>
+                            </tr>
+                        </thead>
+                        <tbody id="items-tbody">
+                        </tbody>
+                    </table>
+                </div>
+                <div class="mt-4 flex space-x-4">
+                    <button type="button" id="add-item" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition duration-200">
+                        + Добавить товар
+                    </button>
+                    <div class="flex items-center text-sm text-gray-600">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        Добавьте товары для списания
+                    </div>
+                </div>
+            </div>
+            <div class="mb-6">
+                <label for="{{ form.comment.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                    {{ form.comment.label }}
+                </label>
+                {{ form.comment }}
+                {% if form.comment.errors %}
+                <p class="text-red-500 text-xs italic mt-1">{{ form.comment.errors.0 }}</p>
+                {% endif %}
+            </div>
+            <div class="bg-gray-50 p-4 rounded-lg mb-6">
+                <div class="flex justify-between items-center">
+                    <span class="text-lg font-semibold text-gray-800">Общая стоимость:</span>
+                    <span id="total-amount" class="text-2xl font-bold text-blue-600">0.00 ₽</span>
+                </div>
+            </div>
+            <div class="flex items-center justify-between mt-8 pt-6 border-t border-gray-200">
+                <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg transition duration-200">
+                    Сохранить накладную
+                </button>
+                <a href="{% url 'expenses:expense_invoice_list' %}" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-lg transition duration-200">
+                    Отмена
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+const products = {{ products|safe }};
+let itemCounter = 0;
+
+function addItemRow(productId = '', quantity = '') {
+    const tbody = document.getElementById('items-tbody');
+    const rowId = `item-${itemCounter++}`;
+
+    const row = document.createElement('tr');
+    row.id = rowId;
+    row.className = 'item-row border-b hover:bg-gray-50';
+
+    let productOptions = '<option value="">Выберите товар</option>';
+    products.forEach(product => {
+        const selected = product.id == productId ? 'selected' : '';
+        productOptions += `<option value="${product.id}" data-price="${product.price}" data-quantity="${product.quantity}" ${selected}>
+            ${product.name} (${product.sku}) - ${product.price} ₽ (остаток: ${product.quantity} ${product.unit})
+        </option>`;
+    });
+
+    row.innerHTML = `
+        <td class="py-3 px-4">
+            <select class="product-select w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" onchange="updateRow('${rowId}')">
+                ${productOptions}
+            </select>
+        </td>
+        <td class="py-3 px-4">
+            <input type="number" class="quantity w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                   value="${quantity}" min="1" step="1" onchange="updateRow('${rowId}')" oninput="updateRow('${rowId}')">
+        </td>
+        <td class="py-3 px-4 price-cell text-sm font-medium">0.00 ₽</td>
+        <td class="py-3 px-4 total-cell text-sm font-medium text-blue-600">0.00 ₽</td>
+        <td class="py-3 px-4 stock-cell text-sm text-gray-500">-</td>
+        <td class="py-3 px-4">
+            <button type="button" onclick="removeRow('${rowId}')" class="text-red-500 hover:text-red-700 transition duration-200">
+                <i class="fas fa-trash"></i>
+            </button>
+        </td>
+    `;
+
+    tbody.appendChild(row);
+    updateRow(rowId);
+}
+
+function updateRow(rowId) {
+    const row = document.getElementById(rowId);
+    if (!row) return;
+
+    const productSelect = row.querySelector('.product-select');
+    const quantityInput = row.querySelector('.quantity');
+    const priceCell = row.querySelector('.price-cell');
+    const totalCell = row.querySelector('.total-cell');
+    const stockCell = row.querySelector('.stock-cell');
+
+    const selectedOption = productSelect.options[productSelect.selectedIndex];
+    const price = selectedOption ? parseFloat(selectedOption.getAttribute('data-price')) || 0 : 0;
+    const stock = selectedOption ? parseInt(selectedOption.getAttribute('data-quantity')) || 0 : 0;
+    const quantity = parseFloat(quantityInput.value) || 0;
+    const total = price * quantity;
+
+    priceCell.textContent = price.toFixed(2) + ' ₽';
+    totalCell.textContent = total.toFixed(2) + ' ₽';
+    stockCell.textContent = stock + ' шт';
+
+    if (quantity > stock) {
+        quantityInput.classList.add('border-red-500', 'bg-red-50');
+        stockCell.classList.add('text-red-600', 'font-semibold');
+        stockCell.innerHTML = `${stock} шт <span class="text-xs">(недостаточно)</span>`;
+    } else {
+        quantityInput.classList.remove('border-red-500', 'bg-red-50');
+        stockCell.classList.remove('text-red-600', 'font-semibold');
+        stockCell.textContent = stock + ' шт';
+    }
+
+    updateTotal();
+}
+
+function removeRow(rowId) {
+    const row = document.getElementById(rowId);
+    if (row) {
+        row.remove();
+        updateTotal();
+    }
+}
+
+function updateTotal() {
+    let totalAmount = 0;
+
+    document.querySelectorAll('.item-row').forEach(row => {
+        const totalCell = row.querySelector('.total-cell');
+        const totalText = totalCell.textContent.replace(' ₽', '');
+        totalAmount += parseFloat(totalText) || 0;
+    });
+
+    document.getElementById('total-amount').textContent = totalAmount.toFixed(2) + ' ₽';
+}
+
+function prepareFormData() {
+    const items = [];
+    let hasErrors = false;
+
+    document.querySelectorAll('.item-row').forEach(row => {
+        const productSelect = row.querySelector('.product-select');
+        const quantityInput = row.querySelector('.quantity');
+
+        if (productSelect.value && quantityInput.value) {
+            const productId = productSelect.value;
+            const quantity = parseInt(quantityInput.value);
+            const stock = parseInt(productSelect.options[productSelect.selectedIndex].getAttribute('data-quantity'));
+
+            if (quantity > stock) {
+                hasErrors = true;
+                quantityInput.classList.add('border-red-500', 'bg-red-50');
+                alert(`Недостаточно товара "${productSelect.options[productSelect.selectedIndex].text}" на складе!`);
+            } else {
+                items.push({
+                    product_id: productId,
+                    quantity: quantity
+                });
+            }
+        }
+    });
+
+    document.getElementById('items-data').value = JSON.stringify(items);
+
+    if (items.length === 0 && !hasErrors) {
+        alert('Добавьте хотя бы один товар для списания');
+        return false;
+    }
+
+    return !hasErrors && items.length > 0;
+}
+
+document.getElementById('expense-form').addEventListener('submit', function(e) {
+    if (!prepareFormData()) {
+        e.preventDefault();
+        return false;
+    }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    addItemRow();
+    document.getElementById('add-item').addEventListener('click', function() {
+        addItemRow();
+    });
+});
+</script>
+{% endblock %}

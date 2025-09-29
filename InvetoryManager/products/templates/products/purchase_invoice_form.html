@@ -9,8 +9,7 @@
         
         <form method="post" id="invoice-form">
             {% csrf_token %}
-            
-            <!-- Основная информация -->
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 <div>
                     <label for="{{ form.invoice_number.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
@@ -40,8 +39,6 @@
                     {{ form.comment }}
                 </div>
             </div>
-
-            <!-- Строки накладной -->
             <h3 class="text-lg font-semibold text-gray-800 mb-4">Товары</h3>
             <div id="formset-container">
                 {{ formset.management_form }}
@@ -105,7 +102,6 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Функция для расчета суммы строки
     function calculateRowTotal(row) {
         const quantity = parseFloat(row.querySelector('.quantity').value) || 0;
         const price = parseFloat(row.querySelector('.price').value) || 0;
@@ -114,7 +110,6 @@ document.addEventListener('DOMContentLoaded', function() {
         return total;
     }
 
-    // Функция для расчета общей суммы
     function calculateTotal() {
         let total = 0;
         document.querySelectorAll('.formset-row').forEach(row => {
@@ -125,23 +120,17 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('total-amount').textContent = total.toFixed(2) + ' ₽';
     }
 
-    // Обработчики событий для полей ввода
     document.querySelectorAll('.quantity, .price').forEach(input => {
         input.addEventListener('input', calculateTotal);
     });
 
-    // Обработчики для чекбоксов удаления
     document.querySelectorAll('input[name$="-DELETE"]').forEach(checkbox => {
         checkbox.addEventListener('change', calculateTotal);
     });
-
-    // Кнопка добавления строки
     document.getElementById('add-row').addEventListener('click', function() {
-        // Здесь должна быть логика для динамического добавления строк
         alert('Для полной реализации нужно добавить JavaScript для динамического добавления строк формсета');
     });
 
-    // Первоначальный расчет
     calculateTotal();
 });
 </script>
