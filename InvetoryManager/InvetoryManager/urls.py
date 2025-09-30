@@ -28,6 +28,8 @@ urlpatterns = [
     path('products/', include('products.urls')),
     path('expenses/', include('expenses.urls')),
     path('', RedirectView.as_view(url='/users/home/', permanent=False)),
+    path('notifications/', include('notifications.urls')),
+    path('reports/', include('reports.urls')),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -1,0 +1,190 @@
+{% extends "users/base.html" %}
+
+{% block title %}Отчет по остаткам товаров{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-800">Отчет по остаткам товаров</h2>
+        <div class="flex space-x-3">
+            <a href="?export=excel{% if category_filter %}&category={{ category_filter }}{% endif %}{% if low_stock_only %}&low_stock={{ low_stock_only }}{% endif %}" 
+               class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition duration-200">
+                <i class="fas fa-file-excel mr-2"></i>Excel
+            </a>
+        </div>
+    </div>
+
+    <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+        <form method="get" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Категория</label>
+                <select name="category" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">Все категории</option>
+                    {% for category in categories %}
+                    <option value="{{ category.id }}" {% if category_filter == category.id|stringformat:"i" %}selected{% endif %}>
+                        {{ category.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Статус</label>
+                <select name="low_stock" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">Все товары</option>
+                    <option value="true" {% if low_stock_only %}selected{% endif %}>Только низкий запас</option>
+                </select>
+            </div>
+            <div class="flex items-end space-x-2">
+                <button type="submit" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md transition duration-200">
+                    Применить
+                </button>
+                <a href="{% url 'reports:stock_report' %}" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md transition duration-200">
+                    Сброс
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-white rounded-lg shadow-md p-4 text-center">
+            <div class="text-2xl font-bold text-blue-600">{{ products.paginator.count }}</div>
+            <div class="text-gray-600">Всего товаров</div>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-4 text-center">
+            <div class="text-2xl font-bold text-green-600">
+                {% with total=products.paginator.count %}
+                    {% with low_stock_count=0 %}
+                        {% for product in products %}
+                            {% if not product.is_low_stock %}
+                                {% with low_stock_count=low_stock_count|add:1 %}{% endwith %}
+                            {% endif %}
+                        {% endfor %}
+                        {{ total|add:low_stock_count }}
+                    {% endwith %}
+                {% endwith %}
+            </div>
+            <div class="text-gray-600">Товаров в норме</div>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-4 text-center">
+            <div class="text-2xl font-bold text-red-600">
+                {% with low_stock_count=0 %}
+                    {% for product in products %}
+                        {% if product.is_low_stock %}
+                            {% with low_stock_count=low_stock_count|add:1 %}{% endwith %}
+                        {% endif %}
+                    {% endfor %}
+                    {{ low_stock_count }}
+                {% endwith %}
+            </div>
+            <div class="text-gray-600">Низкий запас</div>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-4 text-center">
+            <div class="text-2xl font-bold text-purple-600">
+                {% with zero_count=0 %}
+                    {% for product in products %}
+                        {% if product.quantity == 0 %}
+                            {% with zero_count=zero_count|add:1 %}{% endwith %}
+                        {% endif %}
+                    {% endfor %}
+                    {{ zero_count }}
+                {% endwith %}
+            </div>
+            <div class="text-gray-600">Нет в наличии</div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Артикул</th>
+                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Наименование</th>
+                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Категория</th>
+                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ед. изм.</th>
+                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Цена</th>
+                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Остаток</th>
+                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Мин. запас</th>
+                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Статус</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for product in products %}
+                    <tr class="{% if product.is_low_stock %}bg-red-50 hover:bg-red-100{% else %}hover:bg-gray-50{% endif %} transition duration-150">
+                        <td class="py-3 px-4 whitespace-nowrap font-mono text-sm">{{ product.sku }}</td>
+                        <td class="py-3 px-4">
+                            <div class="text-sm font-medium text-gray-900">{{ product.name }}</div>
+                        </td>
+                        <td class="py-3 px-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">{{ product.category.name|default:"-" }}</div>
+                        </td>
+                        <td class="py-3 px-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">{{ product.get_unit_display }}</div>
+                        </td>
+                        <td class="py-3 px-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">{{ product.price }} ₽</div>
+                        </td>
+                        <td class="py-3 px-4 whitespace-nowrap">
+                            <div class="text-sm font-medium {% if product.is_low_stock %}text-red-600{% else %}text-gray-900{% endif %}">
+                                {{ product.quantity }}
+                            </div>
+                        </td>
+                        <td class="py-3 px-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">{{ product.min_stock }}</div>
+                        </td>
+                        <td class="py-3 px-4 whitespace-nowrap">
+                            {% if product.quantity == 0 %}
+                            <span class="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">Нет в наличии</span>
+                            {% elif product.is_low_stock %}
+                            <span class="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">Низкий запас</span>
+                            {% else %}
+                            <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">В норме</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="py-8 px-4 text-center">
+                            <div class="text-gray-500 text-lg">Товары не найдены</div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% if products.has_other_pages %}
+    <div class="mt-6 flex justify-center">
+        <nav class="inline-flex rounded-md shadow-sm">
+            {% if products.has_previous %}
+            <a href="?page={{ products.previous_page_number }}{% if category_filter %}&category={{ category_filter }}{% endif %}{% if low_stock_only %}&low_stock={{ low_stock_only }}{% endif %}" 
+               class="px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 rounded-l-md">
+                Назад
+            </a>
+            {% endif %}
+
+            {% for num in products.paginator.page_range %}
+                {% if products.number == num %}
+                <span class="px-4 py-2 border border-gray-300 bg-blue-500 text-white text-sm font-medium">
+                    {{ num }}
+                </span>
+                {% else %}
+                <a href="?page={{ num }}{% if category_filter %}&category={{ category_filter }}{% endif %}{% if low_stock_only %}&low_stock={{ low_stock_only }}{% endif %}" 
+                   class="px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                    {{ num }}
+                </a>
+                {% endif %}
+            {% endfor %}
+
+            {% if products.has_next %}
+            <a href="?page={{ products.next_page_number }}{% if category_filter %}&category={{ category_filter }}{% endif %}{% if low_stock_only %}&low_stock={{ low_stock_only }}{% endif %}" 
+               class="px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 rounded-r-md">
+                Вперед
+            </a>
+            {% endif %}
+        </nav>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

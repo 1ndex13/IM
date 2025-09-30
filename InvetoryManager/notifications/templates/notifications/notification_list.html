@@ -1,0 +1,130 @@
+{% extends "users/base.html" %}
+
+{% block title %}Уведомления{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-800">Уведомления</h2>
+        <div class="flex space-x-4">
+            {% if notifications %}
+            <button onclick="markAllAsRead()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition duration-200">
+                Пометить все как прочитанные
+            </button>
+            {% endif %}
+            <a href="{% url 'users:home' %}" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition duration-200">
+                На главную
+            </a>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        {% if notifications %}
+            <div class="divide-y divide-gray-200">
+                {% for notification in notifications %}
+                <div class="p-6 hover:bg-gray-50 transition duration-150 {% if not notification.is_read %}bg-blue-50 border-l-4 border-blue-500{% endif %}">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <div class="flex items-center space-x-3 mb-2">
+                                <h3 class="text-lg font-semibold text-gray-800">{{ notification.title }}</h3>
+                                <span class="px-2 py-1 text-xs rounded-full 
+                                    {% if notification.notification_type == 'low_stock' %}bg-red-100 text-red-800
+                                    {% elif notification.notification_type == 'alert' %}bg-yellow-100 text-yellow-800
+                                    {% else %}bg-blue-100 text-blue-800{% endif %}">
+                                    {{ notification.get_notification_type_display }}
+                                </span>
+                                {% if not notification.is_read %}
+                                <span class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">Новое</span>
+                                {% endif %}
+                            </div>
+                            <p class="text-gray-600 mb-3">{{ notification.message }}</p>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-500">{{ notification.created_at|date:"d.m.Y H:i" }}</span>
+                                {% if not notification.is_read %}
+                                <button onclick="markAsRead({{ notification.id }})" 
+                                        class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                                    Пометить как прочитанное
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            {% if notifications.has_other_pages %}
+            <div class="px-6 py-4 border-t border-gray-200">
+                <div class="flex justify-center">
+                    <nav class="inline-flex rounded-md shadow-sm">
+                        {% if notifications.has_previous %}
+                        <a href="?page={{ notifications.previous_page_number }}" class="px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 rounded-l-md">
+                            Назад
+                        </a>
+                        {% endif %}
+
+                        {% for num in notifications.paginator.page_range %}
+                            {% if notifications.number == num %}
+                            <span class="px-4 py-2 border border-gray-300 bg-blue-500 text-white text-sm font-medium">
+                                {{ num }}
+                            </span>
+                            {% else %}
+                            <a href="?page={{ num }}" class="px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                {{ num }}
+                            </a>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if notifications.has_next %}
+                        <a href="?page={{ notifications.next_page_number }}" class="px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 rounded-r-md">
+                            Вперед
+                        </a>
+                        {% endif %}
+                    </nav>
+                </div>
+            </div>
+            {% endif %}
+        {% else %}
+            <div class="text-center py-12">
+                <div class="text-gray-400 text-6xl mb-4">
+                    <i class="fas fa-bell-slash"></i>
+                </div>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">Уведомлений нет</h3>
+                <p class="text-gray-500">Здесь будут появляться ваши уведомления</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function markAsRead(notificationId) {
+    fetch(`/notifications/${notificationId}/read/`, {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': '{{ csrf_token }}'
+        }
+    }).then(response => response.json())
+      .then(data => {
+          if (data.success) {
+              location.reload();
+          }
+      });
+}
+
+function markAllAsRead() {
+    fetch('/notifications/mark-all-read/', {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': '{{ csrf_token }}'
+        }
+    }).then(response => response.json())
+      .then(data => {
+          if (data.success) {
+              location.reload();
+          }
+      });
+}
+</script>
+{% endblock %}
